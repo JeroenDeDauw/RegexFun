@@ -251,7 +251,7 @@ class ExtRegexFun {
 		$msgHtml = Html::rawElement( // don't escape content since this is not HTML but wikitext!
 			'span',
 			array( 'class' => 'error' ),
-			wfMessage( $message, $params )->inContentLanguage()->toString() // parser functions are mainly used in wikitext within wiki pages!
+			wfMessage( $message, $params )->inContentLanguage()->text() // parser functions are mainly used in wikitext within wiki pages!
 		);
 		// 'noparse' true for <nowiki>, 'isHTML' false for #iferror!
 		return array( $msgHtml, 'noparse' => true, 'isHTML' => false );
@@ -494,7 +494,7 @@ class ExtRegexFun {
 
 		// validate and check for wrong input (no effect on #regex_var):
 		if( ! self::validateRegex( $pattern, $specialFlags ) ) {
-			return self::msgInvalidRegex( $pattern );;
+			return self::msgInvalidRegex( $pattern );
 		}
 
 		// adjust default values:
