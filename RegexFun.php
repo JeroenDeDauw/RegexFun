@@ -48,6 +48,8 @@ require_once ExtRegexFun::getDir() . '/RegexFun_Settings.php';
 // parser tests registration:
 $wgParserTestFiles[] = ExtRegexFun::getDir() . '/tests/parser/regexfunParserTests.txt';
 
+$globalRegexFun = [];
+
 use Wikimedia\AtEase\AtEase;
 
 /**
@@ -418,7 +420,7 @@ class ExtRegexFun {
 				'replacement' => $replacement,
 				'parser'      => &$parser,
 				'frame'       => $frame,
-				'internal'    => isset( $parser->mExtRegexFun['lastMatches'] ) && $parser->mExtRegexFun['lastMatches'] === false
+				'internal'    => isset( $GLOBALS['globalRegexFun']['lastMatches'] ) && $GLOBALS['globalRegexFun']['lastMatches'] === false
 			);
 
 			// do the actual replacement with special 'e' flag handling
@@ -721,12 +723,12 @@ class ExtRegexFun {
 	public static function onParserClearState( &$parser ) {
 		//cleanup to avoid conflicts with job queue or Special:Import
 		/*
-		$parser->mExtRegexFun = array();
+		$GLOBALS['globalRegexFun'] = array();
 		self::setLastMatches( $parser, null );
 		self::setLastPattern( $parser, '' );
 		self::setLastSubject( $parser, '' );
 		*/
-		$parser->mExtRegexFun['counter'] = 0;
+		$GLOBALS['globalRegexFun']['counter'] = 0;
 
 		return true;
 	}
@@ -741,19 +743,19 @@ class ExtRegexFun {
 		global $egRegexFunMaxRegexPerParse;
 		return (
 			$egRegexFunMaxRegexPerParse !== -1
-			&& $parser->mExtRegexFun['counter'] >= $egRegexFunMaxRegexPerParse
+			&& $GLOBALS['globalRegexFun']['counter'] >= $egRegexFunMaxRegexPerParse
 		);
 	}
 
 	public static function getLimitCount( Parser &$parser ) {
-		if( isset( $parser->mExtRegexFun['counter'] ) ) {
-			return $parser->mExtRegexFun['counter'];
+		if( isset( $GLOBALS['globalRegexFun']['counter'] ) ) {
+			return $GLOBALS['globalRegexFun']['counter'];
 		}
 		return 0;
 	}
 
 	private static function increaseRegexCount( Parser &$parser ) {
-		$parser->mExtRegexFun['counter']++;
+		$GLOBALS['globalRegexFun']['counter']++;
 	}
 
 	/**
