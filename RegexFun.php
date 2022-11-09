@@ -48,8 +48,6 @@ require_once ExtRegexFun::getDir() . '/RegexFun_Settings.php';
 // parser tests registration:
 $wgParserTestFiles[] = ExtRegexFun::getDir() . '/tests/parser/regexfunParserTests.txt';
 
-$globalRegexFun = [];
-
 use Wikimedia\AtEase\AtEase;
 
 /**
@@ -420,7 +418,7 @@ class ExtRegexFun {
 				'replacement' => $replacement,
 				'parser'      => &$parser,
 				'frame'       => $frame,
-				'internal'    => isset( $GLOBALS['globalRegexFun']['lastMatches'] ) && $GLOBALS['globalRegexFun']['lastMatches'] === false
+				'internal'    => $parser->getOutput()->getExtensionData( 'regexFunLastMatches' ) === false
 			);
 
 			// do the actual replacement with special 'e' flag handling
@@ -720,15 +718,9 @@ class ExtRegexFun {
 		self::setLastSubject( $frame, $subject );
 	}
 
-	public static function onParserClearState( &$parser ) {
+	public static function onParserClearState( Parser &$parser ) {
 		//cleanup to avoid conflicts with job queue or Special:Import
-		/*
-		$GLOBALS['globalRegexFun'] = array();
-		self::setLastMatches( $parser, null );
-		self::setLastPattern( $parser, '' );
-		self::setLastSubject( $parser, '' );
-		*/
-		$GLOBALS['globalRegexFun']['counter'] = 0;
+		$parser->getOutput()->setExtensionData( 'regexFunCounter', 0 );
 
 		return true;
 	}
@@ -743,19 +735,19 @@ class ExtRegexFun {
 		global $egRegexFunMaxRegexPerParse;
 		return (
 			$egRegexFunMaxRegexPerParse !== -1
-			&& $GLOBALS['globalRegexFun']['counter'] >= $egRegexFunMaxRegexPerParse
+			&& $parser->getOutput()->getExtensionData( 'regexFunCounter' ) >= $egRegexFunMaxRegexPerParse
 		);
 	}
 
-	public static function getLimitCount( Parser &$parser ) {
-		if( isset( $GLOBALS['globalRegexFun']['counter'] ) ) {
-			return $GLOBALS['globalRegexFun']['counter'];
-		}
-		return 0;
+	public static function getLimitCount( Parser &$parser ): int {
+		return $parser->getOutput()->getExtensionData( 'regexFunCounter' ) ?? 0;
 	}
 
-	private static function increaseRegexCount( Parser &$parser ) {
-		$GLOBALS['globalRegexFun']['counter']++;
+	private static function increaseRegexCount( Parser &$parser ): void {
+		$parser->getOutput()->setExtensionData(
+			'regexFunCounter',
+			self::getLimitCount( $parser ) + 1
+		);
 	}
 
 	/**
